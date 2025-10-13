@@ -1,5 +1,6 @@
 package com.sinensia.games;
 
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -107,7 +108,14 @@ public class AppGame {
      */
     public static void main(String[] args) {
         GuessGame juego = new GuessGame(3);
-        GameIO consola = new Consola();
-        new AppGame(juego, consola).start();
+        try {
+            GameIO fileio = new FileIO("guessgame\\src\\main\\resources\\jugadas.txt");
+            new AppGame(juego, fileio).start();
+        } catch (IOException _) {
+            System.out.println("No se puede abrir archivo");
+        }
+        // GameIO consola = new Consola();
+        // new AppGame(juego, consola).start();
+
     }
 }
