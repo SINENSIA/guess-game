@@ -6,8 +6,10 @@ import java.util.Scanner;
 /**
  * Variante autónoma del juego para ejecutarlo directamente desde la consola.
  * <p>
- * Representa una versión monohilo y auto-contenida del juego, útil para comparar con la
- * orquestación basada en {@link AppGame}. Mantiene un diseño procedural sencillo que facilita
+ * Representa una versión monohilo y auto-contenida del juego, útil para
+ * comparar con la
+ * orquestación basada en {@link AppGame}. Mantiene un diseño procedural
+ * sencillo que facilita
  * la lectura para perfiles en aprendizaje.
  * </p>
  *
@@ -32,7 +34,8 @@ public class TwrGame {
 
     /**
      * Valida el número propuesto por el jugador manteniendo la lógica original.
-     * IMPORTANTE: si el número está fuera del rango, se indica como entrada inválida.
+     * IMPORTANTE: si el número está fuera del rango, se indica como entrada
+     * inválida.
      *
      * @param numero valor introducido por la persona usuaria
      * @return estado que indica acierto, fallo o entrada inválida
@@ -44,15 +47,20 @@ public class TwrGame {
                 return Estado.INVALID; // Se preserva el comportamiento original de esta versión.
             }
             return (numeroInt == numeroSecreto) ? Estado.SUCCESS : Estado.FAILED;
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
+            GameLogger.warn("Entrada no numérica detectada en TwrGame.verificarInput");
             return Estado.INVALID;
+        } catch (Exception e) {
+            GameLogger.error("BUG: error no controlado en TwrGame.verificarInput", e);
+            return Estado.ERROR;
         }
     }
 
     /**
      * Bucle principal del juego (versión simple, mono-hilo).
      * <p>
-     * De forma similar a un <strong>Template Method</strong>, define la secuencia fija de pasos
+     * De forma similar a un <strong>Template Method</strong>, define la secuencia
+     * fija de pasos
      * (pedir, validar, informar) sin separar la entrada/salida en estrategias.
      * </p>
      */
@@ -73,6 +81,10 @@ public class TwrGame {
                     }
                     case FAILED -> System.out.println("No es ese... Te quedan " + (vidasRestantes - 1) + " vidas.");
                     case INVALID -> System.out.println("Entrada no válida. Debes poner un número del 1 al 10.");
+                    case ERROR -> {
+                        System.out.println("Se produjo un error inesperado. Inténtalo más tarde.");
+                        return;
+                    }
                 }
             }
 
@@ -84,7 +96,7 @@ public class TwrGame {
      * Estados posibles al validar la jugada en esta variante.
      */
     enum Estado {
-        SUCCESS, FAILED, INVALID
+        SUCCESS, FAILED, INVALID, ERROR
     }
 
     /**

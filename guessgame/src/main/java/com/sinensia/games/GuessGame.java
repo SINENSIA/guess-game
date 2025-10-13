@@ -69,8 +69,8 @@ public class GuessGame {
     public Estado verificarInput(String numero) {
         synchronized (lock) {
             if (terminado.get()) {
-                // Si alguien ya ganó, rechazamos nuevos intentos (comportamiento actual).
-                return Estado.FAILED;
+                // Si alguien ya ganó, notificamos explícitamente el estado para clientes concurrentes.
+                return Estado.ENDED;
             }
 
             try {
@@ -85,8 +85,12 @@ public class GuessGame {
                 }
                 return Estado.FAILED;
 
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException _) {
+                GameLogger.warn("Entrada no numérica detectada en GuessGame.verificarInput");
                 return Estado.INVALID; // Entradas no numéricas.
+            } catch (Exception e) {
+                GameLogger.error("BUG: error no controlado en GuessGame.verificarInput", e);
+                return Estado.ERROR;
             }
         }
     }
@@ -130,7 +134,9 @@ public class GuessGame {
         INVALID,
         /** La entrada numérica quedó fuera del rango permitido. */
         OUTOFRANGE,
-        /** Estado reservado para indicar partida cerrada en escenarios externos/concurrentes. */
+        /** Error general no previsto; se registra para el equipo de desarrollo. */
+        ERROR,
+        /** Se devuelve cuando la partida ya fue resuelta por otro participante. */
         ENDED
     }
 }

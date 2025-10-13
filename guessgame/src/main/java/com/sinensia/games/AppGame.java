@@ -1,5 +1,6 @@
 package com.sinensia.games;
 
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import com.sinensia.games.GuessGame.Estado;
@@ -52,7 +53,16 @@ public class AppGame {
         // Bucle de juego: continúa mientras queden vidas disponibles.
         while (vidasRestantes > 0) {
             io.print("Introduce un número:");
-            String input = io.read(); // Delegamos la lectura para desacoplar de la consola.
+            String input;
+            try {
+                input = io.read(); // Delegamos la lectura para desacoplar de la consola.
+            } catch (RuntimeException e) {
+                if (e instanceof NoSuchElementException || e instanceof IllegalStateException) {
+                    io.print("Entrada interrumpida. Finalizando la partida.");
+                    return;
+                }
+                throw e;
+            }
             Estado resultado = game.verificarInput(input);
 
             switch (resultado) {
@@ -66,8 +76,15 @@ public class AppGame {
                 }
                 case INVALID -> io.print("Entrada inválida. Usa números del 1 al 10.");
                 case OUTOFRANGE -> io.print("Número fuera de rango");
-                // El enum tiene más estados reservados para escenarios concurrentes.
-                // Si llegaran aquí, simplemente ignoramos la entrada (comportamiento actual).
+                case ERROR -> {
+                    io.print("Se produjo un error inesperado. Por favor, intenta nuevamente más tarde.");
+                    return;
+                }
+                case ENDED -> {
+                    io.print("La partida ya había finalizado.");
+                    return;
+                }
+                // OUTOFRANGE o ENDED representan escenarios menos comunes pero gestionados arriba.
             }
         }
         // Llegamos aquí cuando el jugador pierde todas sus vidas.
