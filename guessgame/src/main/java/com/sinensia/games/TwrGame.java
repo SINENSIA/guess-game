@@ -5,6 +5,14 @@ import java.util.Scanner;
 
 /**
  * Variante autónoma del juego para ejecutarlo directamente desde la consola.
+ * <p>
+ * Representa una versión monohilo y auto-contenida del juego, útil para comparar con la
+ * orquestación basada en {@link AppGame}. Mantiene un diseño procedural sencillo que facilita
+ * la lectura para perfiles en aprendizaje.
+ * </p>
+ *
+ * @author sinensia
+ * @version 0.0.2
  */
 public class TwrGame {
 
@@ -15,6 +23,9 @@ public class TwrGame {
 
     private final int numeroSecreto;
 
+    /**
+     * Crea una instancia con un número secreto aleatorio.
+     */
     public TwrGame() {
         numeroSecreto = RAND.nextInt(MIN, MAX + 1);
     }
@@ -22,6 +33,9 @@ public class TwrGame {
     /**
      * Valida el número propuesto por el jugador manteniendo la lógica original.
      * IMPORTANTE: si el número está fuera del rango, se indica como entrada inválida.
+     *
+     * @param numero valor introducido por la persona usuaria
+     * @return estado que indica acierto, fallo o entrada inválida
      */
     public Estado verificarInput(String numero) {
         try {
@@ -37,6 +51,10 @@ public class TwrGame {
 
     /**
      * Bucle principal del juego (versión simple, mono-hilo).
+     * <p>
+     * De forma similar a un <strong>Template Method</strong>, define la secuencia fija de pasos
+     * (pedir, validar, informar) sin separar la entrada/salida en estrategias.
+     * </p>
      */
     public void play() {
         try (Scanner scanner = new Scanner(System.in)) { // try-with-resources gestiona el cierre automáticamente.
@@ -62,10 +80,18 @@ public class TwrGame {
         }
     }
 
+    /**
+     * Estados posibles al validar la jugada en esta variante.
+     */
     enum Estado {
         SUCCESS, FAILED, INVALID
     }
 
+    /**
+     * Permite ejecutar esta variante directamente desde la JVM.
+     *
+     * @param args argumentos de línea de comandos (no utilizados)
+     */
     public static void main(String[] args) {
         new TwrGame().play();
     }

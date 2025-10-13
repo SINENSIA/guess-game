@@ -5,7 +5,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Núcleo del juego de adivinar números.
- * Mantiene el estado compartido de forma segura para permitir escenarios con múltiples hilos.
+ * <p>
+ * Encapsula el número secreto y el conteo de vidas aplicando el patrón <strong>Monitor Object</strong>:
+ * todas las operaciones sensibles se ejecutan dentro de un bloqueo interno para garantizar
+ * la consistencia cuando se invoca desde múltiples hilos (ver {@link #verificarInput(String)}).
+ * También expone lectura segura del estado mediante {@link AtomicBoolean}, lo que permite comprobar
+ * si se ha terminado la partida sin entrar en secciones críticas.
+ * </p>
+ *
+ * @author sinensia
+ * @version 0.0.2
  */
 public class GuessGame {
 
@@ -28,12 +37,20 @@ public class GuessGame {
      */
     private final AtomicBoolean terminado = new AtomicBoolean(false);
 
+    /**
+     * Crea una partida con un número secreto aleatorio.
+     *
+     * @param maxVidas número máximo de intentos permitidos
+     */
     public GuessGame(int maxVidas) {
         this(maxVidas, RAND.nextInt(MIN_PERMITIDO, MAX_PERMITIDO + 1));
     }
 
     /**
      * Constructor pensado para pruebas: permite fijar el número esperado.
+     *
+     * @param maxVidas          número máximo de intentos
+     * @param numeroSecretoFijo valor que se desea adivinar en la partida
      */
     public GuessGame(int maxVidas, int numeroSecretoFijo) {
         this.numeroSecreto = numeroSecretoFijo;
@@ -45,6 +62,9 @@ public class GuessGame {
      * El método es thread-safe: toda la lógica se ejecuta dentro de un bloque
      * {@code synchronized} para garantizar consistencia cuando varios hilos
      * intentan adivinar a la vez.
+     *
+     * @param numero intento del jugador tal y como se recibe (texto libre)
+     * @return estado que describe si se acertó, falló o si la entrada es inválida
      */
     public Estado verificarInput(String numero) {
         synchronized (lock) {
@@ -71,14 +91,29 @@ public class GuessGame {
         }
     }
 
+    /**
+     * Indica si la partida ya cuenta con una persona ganadora.
+     *
+     * @return {@code true} si el número ha sido descubierto
+     */
     public boolean isTerminado() {
         return terminado.get();
     }
 
+    /**
+     * Devuelve el número secreto en curso (principalmente útil para informes o pruebas).
+     *
+     * @return número secreto configurado para la partida
+     */
     public int getNumeroSecreto() {
         return numeroSecreto;
     }
 
+    /**
+     * Recupera el número máximo de vidas con el que se creó la partida.
+     *
+     * @return número máximo de intentos disponibles
+     */
     public int getMaxVidas() {
         return maxVidas;
     }
@@ -87,6 +122,15 @@ public class GuessGame {
      * Posibles respuestas al procesar un intento de adivinanza.
      */
     public enum Estado {
-        SUCCESS, FAILED, INVALID, OUTOFRANGE, ENDED
+        /** La persona jugadora acertó el número. */
+        SUCCESS,
+        /** Intento válido pero erróneo; la partida continúa. */
+        FAILED,
+        /** La entrada no se pudo parsear como entero. */
+        INVALID,
+        /** La entrada numérica quedó fuera del rango permitido. */
+        OUTOFRANGE,
+        /** Estado reservado para indicar partida cerrada en escenarios externos/concurrentes. */
+        ENDED
     }
 }

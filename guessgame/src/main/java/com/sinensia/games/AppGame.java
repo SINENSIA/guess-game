@@ -6,13 +6,28 @@ import com.sinensia.games.GuessGame.Estado;
 
 /**
  * Orquesta la interacción del jugador con la lógica del juego.
- * Se le inyectan sus dependencias para facilitar pruebas y reutilización.
+ * <p>
+ * Implementa el patrón <strong>Strategy</strong> al recibir una implementación de {@link GameIO},
+ * permitiendo intercambiar el canal de entrada/salida (consola real, interfaz gráfica, mocks en tests, etc.)
+ * sin modificar el flujo principal. Además, sigue el principio de inversión de dependencias al recibir
+ * sus colaboraciones desde el exterior.
+ * </p>
+ *
+ * @author sinensia
+ * @version 0.0.2
  */
 public class AppGame {
 
     private final GuessGame game; // Lógica del juego (reglas y validaciones).
     private final GameIO io; // Canal de entrada/salida (consola, mocks, etc.).
 
+    /**
+     * Crea la aplicación de consola inyectando la lógica del juego y el canal de E/S.
+     *
+     * @param game lógica central que conoce el número secreto
+     * @param io   estrategia de interacción con la persona usuaria
+     * @throws NullPointerException si alguna dependencia es nula
+     */
     public AppGame(GuessGame game, GameIO io) {
         // Validamos dependencias para evitar NullPointerException accidentales.
         this.game = Objects.requireNonNull(game, "game no puede ser null");
@@ -20,10 +35,14 @@ public class AppGame {
     }
 
     /**
-     * Arranca el bucle principal del juego:
-     * 1. Se dan la bienvenida y vidas iniciales.
-     * 2. Se solicita un número hasta acertar o quedarse sin vidas.
-     * 3. Se informa en cada iteración del resultado del intento.
+     * Arranca el ciclo de juego clásico:
+     * <ol>
+     *     <li>Da la bienvenida e informa del número de vidas.</li>
+     *     <li>Pide intentos hasta acertar o agotar las vidas.</li>
+     *     <li>Comunica el resultado de cada jugada con mensajes claros.</li>
+     * </ol>
+     * Esta operación personifica el patrón <strong>Template Method</strong> informal,
+     * porque define la secuencia fija de pasos mientras delega la entrada/salida a {@link GameIO}.
      */
     public void start() {
         int vidasRestantes = game.getMaxVidas();
@@ -55,6 +74,12 @@ public class AppGame {
         io.print("Game Over. El número era " + game.getNumeroSecreto());
     }
 
+    /**
+     * Punto de entrada convencional para ejecutar el juego desde la consola estándar.
+     * Instancia la lógica con 3 vidas y utiliza la consola como estrategia de E/S.
+     *
+     * @param args parámetros de línea de comandos (no utilizados)
+     */
     public static void main(String[] args) {
         GuessGame juego = new GuessGame(3);
         GameIO consola = new Consola();

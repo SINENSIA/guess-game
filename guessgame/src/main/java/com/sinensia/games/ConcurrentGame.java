@@ -6,7 +6,14 @@ import java.util.concurrent.Executors;
 
 /**
  * Pequeña demo para ilustrar que {@link GuessGame} soporta accesos concurrentes.
- * Varios hilos intentan adivinar el mismo número hasta que uno acierta.
+ * <p>
+ * Aplica el patrón <strong>Executor</strong> (basado en {@link ExecutorService}) para lanzar múltiples
+ * hilos trabajadores que comparten la misma instancia de juego. Cada hilo ejerce de "cliente"
+ * independiente y demuestra cómo el bloqueo interno de {@link GuessGame} evita condiciones de carrera.
+ * </p>
+ *
+ * @author sinensia
+ * @version 0.0.2
  */
 public final class ConcurrentGame {
 
@@ -17,6 +24,11 @@ public final class ConcurrentGame {
         // Evitamos instanciación: la clase solo ofrece el método main.
     }
 
+    /**
+     * Ejecuta la simulación concurrente creando un pool fijo de jugadores virtuales.
+     *
+     * @param args parámetros de línea de comandos (no utilizados)
+     */
     public static void main(String[] args) {
         GuessGame juego = new GuessGame(VIDAS_POR_JUGADOR); // número secreto común
         try (ExecutorService pool = Executors.newFixedThreadPool(NUM_JUGADORES)) {
@@ -30,6 +42,12 @@ public final class ConcurrentGame {
         }
     }
 
+    /**
+     * Rutina que ejecuta cada jugador virtual: genera intentos aleatorios hasta detectar un ganador.
+     *
+     * @param juego  instancia compartida y thread-safe
+     * @param nombre etiqueta de identificación del "jugador"
+     */
     private static void jugar(GuessGame juego, String nombre) {
         Random rnd = new Random();
         while (!juego.isTerminado()) {
