@@ -1,85 +1,252 @@
 package com.sinensia.games;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.stereotype.Service;
 
 /**
- * Pequeña demo para ilustrar que {@link GuessGame} soporta accesos
- * concurrentes.
+ * Orquesta partidas compartidas entre múltiples jugadores procedentes de la
+ * Web.
  * <p>
- * Aplica el patrón <strong>Executor</strong> (basado en
- * {@link ExecutorService}) para lanzar múltiples
- * hilos trabajadores que comparten la misma instancia de juego.
- * También recurre a dos singletons:
- * <ul>
- * <li>{@link GameRandom} para reutilizar la fuente pseudoaleatoria.</li>
- * <li>{@link GameLogger} para registrar eventos y excepciones de forma
- * centralizada.</li>
- * </ul>
- * Cada hilo ejerce de "cliente" independiente y demuestra cómo el bloqueo
- * interno de {@link GuessGame}
- * evita condiciones de carrera.
+ * Sustituye la antigua demo de hilos manuales por una fachada preparada para
+ * Spring Boot. Mantiene un único {@link GuessGame} como núcleo thread-safe,
+ * asigna vidas independientes a cada jugador y compone respuestas para la capa
+ * MVC. Gracias a las estructuras concurrentes y a la sincronización interna, la
+ * clase es segura para ser usada desde múltiples peticiones simultáneas.
  * </p>
- *
- * @author sinensia
- * @version 0.0.3
  */
-public final class ConcurrentGame {
+@Service
+public class ConcurrentGame {
 
-    private static final int NUM_JUGADORES = 3;
     private static final int VIDAS_POR_JUGADOR = 3;
+    private static final int MIN = 1;
+    private static final int MAX = 10;
 
-    private ConcurrentGame() {
-        // Evitamos instanciación: la clase solo ofrece el método main.
+    private final Map<String, PlayerState> players = new ConcurrentHashMap<>();
+
+    private volatile GuessGame game;
+    private volatile String winnerId;
+    private volatile int currentSecret;
+
+    public ConcurrentGame() {
+        startNewGame();
     }
 
     /**
-     * Ejecuta la simulación concurrente creando un pool fijo de jugadores
-     * virtuales.
+     * Registra un jugador nuevo o devuelve el existente si el alias coincide.
      *
-     * @param args parámetros de línea de comandos (no utilizados)
+     * @param alias nombre mostrable
+     * @return vista inmutable del jugador
      */
-    public static void main(String[] args) {
-        GuessGame juego = new GuessGame(VIDAS_POR_JUGADOR); // número secreto común
-        try (ExecutorService pool = Executors.newFixedThreadPool(NUM_JUGADORES)) {
-
-            for (int i = 1; i <= NUM_JUGADORES; i++) {
-                String nombre = "Jugador-" + i;
-                pool.submit(() -> jugar(juego, nombre));
-            }
-
-            pool.shutdown(); // Rechaza nuevas tareas; los hilos activos terminan solos.
+    public synchronized PlayerView registerPlayer(String alias) {
+        Objects.requireNonNull(alias, "alias no puede ser null");
+        String normalized = alias.trim();
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("El alias no puede quedar vacío");
         }
+
+        Optional<PlayerState> existing = players.values().stream()
+                .filter(p -> p.aliasEquals(normalized))
+                .findFirst();
+        if (existing.isPresent()) {
+            return existing.get().view();
+        }
+
+        PlayerState state = new PlayerState(UUID.randomUUID().toString(), normalized, VIDAS_POR_JUGADOR);
+        players.put(state.id(), state);
+        return state.view();
     }
 
     /**
-     * Rutina que ejecuta cada jugador virtual: genera intentos aleatorios hasta
-     * detectar un ganador.
+     * Recupera el estado actual de un jugador registrado.
      *
-     * @param juego  instancia compartida y thread-safe
-     * @param nombre etiqueta de identificación del "jugador"
+     * @param playerId identificador del jugador
+     * @return vista inmutable
      */
-    private static void jugar(GuessGame juego, String nombre) {
-        while (!juego.isTerminado()) {
-            int intento = GameRandom.nextInt(1, 11); // Se mantiene el rango válido (1-10).
-            GuessGame.Estado estado = juego.verificarInput(String.valueOf(intento));
+    public synchronized PlayerView getPlayer(String playerId) {
+        return findPlayerOrThrow(playerId).view();
+    }
 
-            switch (estado) {
-                case SUCCESS -> GameLogger.info(nombre + " adivinó el número!");
-                case FAILED -> GameLogger.info(nombre + " probó con " + intento);
-                case INVALID -> GameLogger.warn(nombre + " introdujo un valor no numérico.");
-                case OUTOFRANGE -> GameLogger.warn(nombre + " salió del rango permitido con " + intento);
-                case ERROR -> GameLogger.error("BUG: estado de error inesperado en ConcurrentGame",
-                        new IllegalStateException("Estado ERROR en hilo " + nombre));
-                case ENDED -> GameLogger.info(nombre + " detectó que la partida terminó.");
-            }
+    /**
+     * Procesa un intento y devuelve información para refrescar la interfaz.
+     *
+     * @param playerId identificador del jugador
+     * @param guess    número introducido
+     * @return resultado del intento
+     */
+    public synchronized GuessResult submitGuess(String playerId, String guess) {
+        PlayerState player = findPlayerOrThrow(playerId);
 
-            try {
-                Thread.sleep(200L + GameRandom.nextInt(200)); // Pausa aleatoria para no saturar el juego.
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Buenas prácticas: restablecemos la interrupción.
-                GameLogger.error("BUG: interrupción inesperada en " + nombre, e);
+        if (player.isEliminated()) {
+            return buildResult(player, GuessGame.Estado.FAILED,
+                    "Ya no te quedan vidas. Espera a que reinicien la partida.");
+        }
+
+        GuessGame.Estado estado = game.verificarInput(guess);
+        String feedback = switch (estado) {
+            case SUCCESS -> {
+                winnerId = player.id();
+                player.markWinner();
+                yield "¡Correcto! Has descubierto el número " + currentSecret + ".";
             }
+            case FAILED -> {
+                player.consumeLife();
+                yield "No es ese... Te quedan " + player.lives() + " vidas.";
+            }
+            case INVALID -> "Entrada inválida. Introduce únicamente números enteros.";
+            case OUTOFRANGE -> "Fuera de rango. Elige un valor entre " + MIN + " y " + MAX + ".";
+            case ERROR -> "Se produjo un error inesperado. Inténtalo nuevamente más tarde.";
+            case ENDED -> {
+                String winner = winnerAlias().orElse("otro jugador");
+                yield "La partida ya concluyó. Ganó " + winner + ".";
+            }
+        };
+
+        return buildResult(player, estado, feedback);
+    }
+
+    /**
+     * Reinicia la partida manteniendo a los jugadores conectados.
+     */
+    public synchronized void resetGame() {
+        startNewGame();
+        players.values().forEach(p -> p.reset(VIDAS_POR_JUGADOR));
+    }
+
+    /**
+     * Devuelve un resumen del tablero para la vista.
+     *
+     * @return estado actual de la partida
+     */
+    public synchronized GameSummary snapshot() {
+        List<PlayerView> board = players.values().stream()
+                .sorted(Comparator.comparing(PlayerState::alias, String.CASE_INSENSITIVE_ORDER))
+                .map(PlayerState::view)
+                .toList();
+        boolean finished = isFinished();
+        return new GameSummary(board, finished, winnerAlias().orElse(null),
+                finished ? currentSecret : null, VIDAS_POR_JUGADOR, allEliminated());
+    }
+
+    private GuessResult buildResult(PlayerState player, GuessGame.Estado estado, String feedback) {
+        return new GuessResult(player.view(), estado, feedback, isFinished(),
+                winnerAlias().orElse(null), shouldRevealSecret() ? currentSecret : null);
+    }
+
+    private boolean shouldRevealSecret() {
+        return isFinished();
+    }
+
+    private boolean isFinished() {
+        return game.isTerminado() || allEliminated();
+    }
+
+    private boolean allEliminated() {
+        return !players.isEmpty() && players.values().stream().allMatch(PlayerState::isEliminated);
+    }
+
+    private Optional<String> winnerAlias() {
+        if (winnerId == null) {
+            return Optional.empty();
+        }
+        PlayerState winner = players.get(winnerId);
+        return Optional.ofNullable(winner).map(PlayerState::alias);
+    }
+
+    private PlayerState findPlayerOrThrow(String playerId) {
+        PlayerState state = players.get(playerId);
+        if (state == null) {
+            throw new IllegalArgumentException("Jugador no registrado: " + playerId);
+        }
+        return state;
+    }
+
+    private void startNewGame() {
+        this.currentSecret = GameRandom.nextInt(MIN, MAX + 1);
+        this.game = new GuessGame(VIDAS_POR_JUGADOR, currentSecret);
+        this.winnerId = null;
+    }
+
+    /**
+     * Estado inmutable expuesto a la capa web.
+     */
+    public record PlayerView(String id, String alias, int lives, boolean eliminated, boolean winner) {
+    }
+
+    /**
+     * Resultado devuelto tras cada jugada.
+     */
+    public record GuessResult(PlayerView player, GuessGame.Estado estado, String message,
+            boolean finished, String winnerAlias, Integer secret) {
+    }
+
+    /**
+     * Información agregada del tablero y estado general.
+     */
+    public record GameSummary(List<PlayerView> players, boolean finished, String winnerAlias,
+            Integer secret, int maxLives, boolean everyoneLost) {
+    }
+
+    private static final class PlayerState {
+        private final String id;
+        private final String alias;
+        private int lives;
+        private boolean eliminated;
+        private boolean winner;
+
+        private PlayerState(String id, String alias, int lives) {
+            this.id = id;
+            this.alias = alias;
+            this.lives = lives;
+        }
+
+        private String id() {
+            return id;
+        }
+
+        private String alias() {
+            return alias;
+        }
+
+        private boolean aliasEquals(String other) {
+            return alias.equalsIgnoreCase(other);
+        }
+
+        private int lives() {
+            return lives;
+        }
+
+        private boolean isEliminated() {
+            return eliminated;
+        }
+
+        private void consumeLife() {
+            if (lives > 0) {
+                lives--;
+                if (lives == 0) {
+                    eliminated = true;
+                }
+            }
+        }
+
+        private void reset(int newLives) {
+            this.lives = newLives;
+            this.eliminated = false;
+            this.winner = false;
+        }
+
+        private void markWinner() {
+            this.winner = true;
+        }
+
+        private PlayerView view() {
+            return new PlayerView(id, alias, lives, eliminated, winner);
         }
     }
 }

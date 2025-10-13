@@ -1,85 +1,112 @@
-# GuessGame 0.0.2
+# GuessGame 0.0.3
 
-Juego educativo de adivinanzas entre 1 y 10 orientado a mostrar buenas prácticas en Java puro.
-Incluye ejemplos de arquitectura con inyección de dependencias, concurrencia segura y pruebas automatizadas.
+GuessGame is an educational number guessing exercise (range 1-10) focused on clean Java practices, dependency inversion, and safe concurrency. The project now ships both console demos and a Spring Boot + Thymeleaf Web UI.
 
-## Requisitos
-- Java 25 (`java --version` debe reportar `openjdk 25`).
-- Maven 3.9 o superior.
-- Consola con soporte para ejecutar scripts PowerShell o Bash.
+## Requirements
 
-## Instalación rápida
-1. Clona o copia el proyecto en tu máquina local.
-2. Abre una terminal en el directorio `guessgame/`.
-3. Compila y ejecuta la batería de pruebas:
+- Java 25 (`java --version` should print `openjdk 25`).
+- Maven 3.9 or newer.
+- Shell capable of running PowerShell or Bash commands.
+
+## Quick start
+
+1. Clone or copy the repository.
+2. Open a terminal inside `guessgame/`.
+3. Run the automated tests:
+
    ```bash
    mvn clean test
    ```
-   El informe confirma dos casos de uso: éxito tras varios intentos e identificación de entrada inválida.
 
-## Pruebas automatizadas
-- La suite principal está en `src/test/java/com/sinensia/games/GuessGameTest.java` y valida tanto el flujo exitoso como la gestión de entradas inválidas simulando la consola con un `MockIO`.
-- Para lanzar todas las pruebas desde cualquier shell compatible, ejecuta `mvn test` dentro de `guessgame/`. Maven dejará el informe en `target/surefire-reports/` y mostrará un resumen en la terminal.
-- Si necesitas repetir únicamente un caso concreto, usa `mvn -Dtest=GuessGameTest#testJuegoAciertaEnElSegundoIntento test` (cambia el nombre tras `#` por el método deseado).
-- En PowerShell recuerda anteponer `./` cuando uses scripts (`./mvnw` si activas el wrapper). El proceso debería finalizar con `BUILD SUCCESS`; cualquier otro estado indica fallos que hay que revisar en los reportes.
-- Los testers manuales pueden ejecutar `java -cp target/classes com.sinensia.games.AppGame` tras compilar y validar visualmente los mensajes que reflejan los mismos escenarios cubiertos por las pruebas.
+   The suite covers a winning scenario and validation of invalid inputs via a mocked `GameIO`.
 
-## Ejecutar el juego
-Maven no trae configurado el plugin `exec` para este proyecto, por lo que conviene compilar y ejecutar utilizando el `classpath` generado.
+## Automated tests
 
-1. Compila (esto genera las clases en `target/classes`):
+- Tests live under `src/test/java/com/sinensia/games/GuessGameTest.java`.
+- Run all tests with `mvn test` (reports are placed in `target/surefire-reports/`).
+- Execute a single case with `mvn -Dtest=GuessGameTest#testJuegoAciertaEnElSegundoIntento test`.
+- From PowerShell remember to prefix scripts with `./` if you enable the Maven wrapper.
+- Manual testers can still run `java -cp target/classes com.sinensia.games.AppGame` after `mvn compile`.
+
+## Playing the game
+
+You can now enjoy the game through the new Web UI or keep using the classic console variants.
+
+### Web interface
+
+1. Start the Spring Boot app from `guessgame/`:
+
+   ```bash
+   mvn spring-boot:run
+   ```
+
+2. Open `http://localhost:8080` and register with an alias. Each browser tab/session becomes an independent player sharing the same match.
+3. When the round finishes, any player may press **Iniciar nueva partida** to reset the board while keeping the registered aliases.
+
+### Console classics
+
+1. Compile (builds classes under `target/classes`):
+
    ```bash
    mvn clean compile
    ```
-2. Lanza la variante deseada indicando el `main` correspondiente:
 
-   - **Juego interactivo por consola (AppGame + Consola):**
+2. Launch the desired `main` entry point:
+
+   - **AppGame + Consola (strategy-friendly IO):**
+
      ```bash
      java -cp target/classes com.sinensia.games.AppGame
      ```
 
-   - **Versión simple autosuficiente (TwrGame):**
+   - **TwrGame (procedural single file version):**
+
      ```bash
      java -cp target/classes com.sinensia.games.TwrGame
      ```
 
-   - **Simulación concurrente (ConcurrentGame):**
-     ```bash
-     java -cp target/classes com.sinensia.games.ConcurrentGame
-     ```
+   Use single quotes in PowerShell when you need to pass extra arguments.
 
-   En PowerShell utiliza comillas simples (`'`) si añades argumentos adicionales.
+> **Note:** Seeing warnings about `java.lang.System::load` or `sun.misc.Unsafe` during Maven execution is expected on recent JDKs. They come from transitive tooling and do not indicate project issues.
 
-> **Nota:** Es normal que aparezcan avisos sobre `java.lang.System::load` y `sun.misc.Unsafe` cuando Maven descarga dependencias. Son advertencias del runtime, no errores del proyecto.
+## Design patterns
 
-## Patrones de diseño destacados
-- **Strategy:** `GameIO` define la estrategia de entrada/salida; `Consola` es una implementación concreta.
-- **Monitor Object / Thread-safe core:** `GuessGame` encapsula el estado con bloqueos internos y `AtomicBoolean`.
-- **Template Method (informal):** `AppGame` y `TwrGame` fijan la secuencia de pasos del juego, delegando variaciones.
-- **Executor:** `ConcurrentGame` utiliza `ExecutorService` para manejar jugadores concurrentes.
-- **Utilidades compartidas:** `GameRandom` y `GameLogger` concentran la generación de aleatorios y el logging, sin recurrir a singletons tradicionales.
-- **Test Double (Mock):** `GuessGameTest` introduce un mock manual de `GameIO` para aislar la lógica del juego.
+- **Strategy:** `GameIO` abstracts I/O; `Consola` and test doubles are concrete strategies.
+- **Monitor Object / thread-safe core:** `GuessGame` protects mutable state with intrinsic locking and `AtomicBoolean`.
+- **Template Method (informal):** `AppGame` and `TwrGame` define step-by-step flows while delegating behaviour.
+- **Concurrent orchestration:** `ConcurrentGame` is now a Spring singleton service that coordinates multiple Web players safely.
+- **Shared utilities:** `GameRandom` and `GameLogger` centralise randomness and logging, avoiding brittle singletons.
+- **Test Double:** `GuessGameTest` introduces a handcrafted mock of `GameIO` to isolate game logic.
 
-## Buenas prácticas de logging y configuración
-- `GameLogger` encapsula el acceso a `java.util.logging` e ilustra cómo registrar eventos/errores sin exponer datos sensibles.
-- Las excepciones se guardan para el personal desarrollador (`LOGGER.error("BUG: …", e)`), mientras que al usuario final se le ofrecen mensajes bien formados.
-- `GameRandom` demuestra la reutilización de recursos compartidos; usar singletons para configuración global es posible, pero valora alternativas como inyección de dependencias o lectura desde ficheros/variables de entorno para mejorar testabilidad y seguridad.
+## Logging and configuration good practices
 
-## Generar documentación Javadoc
-Los comentarios didácticos están listos para producir la documentación HTML:
+- `GameLogger` wraps `java.util.logging` to control formatting and sensitive data exposure.
+- Exceptions get logged for developers while end users receive friendly messages.
+- `GameRandom` exemplifies reusable helpers without resorting to global mutable state, keeping things testable.
+
+## Generating Javadoc
+
+The project is documented and ready to build HTML docs:
+
 ```bash
 mvn javadoc:javadoc
 ```
-El resultado se guardará en `target/reports/apidocs/index.html`. Abre ese archivo en un navegador para consultar la guía.
 
-## Estructura del proyecto
-- `src/main/java/com/sinensia/games/` — Código principal del juego y demos.
-- `src/test/java/com/sinensia/games/` — Pruebas automatizadas con JUnit 5.
-- `pom.xml` — Configuración Maven (Java 25, plugins y dependencias).
+Artifacts are emitted to `target/site/apidocs/index.html`.
 
-## Próximos pasos sugeridos
-- Añadir más casos de prueba (por ejemplo, agotamiento de vidas).
-- Internacionalización de los mensajes para soportar varios idiomas.
-- Crear una interfaz gráfica reutilizando la misma lógica central (`GuessGame` + `GameIO`).
+## Project layout
 
-¡Disfruta aprendiendo y experimentando con GuessGame!
+- `src/main/java/com/sinensia/games/` — Core game logic, console runners, Spring Boot entry point.
+- `src/main/java/com/sinensia/games/web/` — MVC forms and controllers for the Web UI.
+- `src/main/resources/templates/` — Thymeleaf templates.
+- `src/main/resources/static/` — Static assets (CSS).
+- `src/test/java/com/sinensia/games/` — JUnit 5 tests.
+- `pom.xml` — Maven build with the Spring Boot parent (Java 25).
+
+## Possible next steps
+
+- Expand test coverage (e.g., lives exhaustion, Web service tests via MockMvc).
+- Add i18n bundles so the Web UI can switch languages.
+- Hook the game state to persistence or WebSockets for richer experiences.
+
+Enjoy experimenting with GuessGame!

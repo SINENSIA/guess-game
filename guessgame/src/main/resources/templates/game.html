@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>GuessGame - Partida</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container">
+    <section class="panel">
+        <h1 th:text="'Hola, ' + ${player.alias}">Hola, jugador</h1>
+        <p>Intenta adivinar el numero secreto entre 1 y 10. Cada fallo consume una vida.</p>
+
+        <div th:if="${welcomeMessage}" class="alert alert-info" th:text="${welcomeMessage}">Bienvenido</div>
+        <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}">Error</div>
+        <div th:if="${infoMessage}" class="alert alert-info" th:text="${infoMessage}">Info</div>
+
+        <div th:if="${lastResult}" th:class="'alert ' + (${lastResult.estado.name() == 'SUCCESS' ? 'alert-success' : 'alert-info'})"
+             th:text="${lastResult.message}">
+            Resultado del ultimo intento.
+        </div>
+
+        <div th:if="${summary.finished}">
+            <h2>La partida ha concluido</h2>
+            <p th:if="${summary.winnerAlias != null}" th:text="'Ganador: ' + ${summary.winnerAlias}">Ganador</p>
+            <p th:if="${summary.winnerAlias == null}">Todos los jugadores agotaron sus vidas.</p>
+            <p th:if="${summary.secret != null}" th:text="'El numero secreto era: ' + ${summary.secret}">Secreto</p>
+
+            <form th:action="@{/reset}" method="post" style="display:inline">
+                <button type="submit">Iniciar nueva partida</button>
+            </form>
+            <form th:action="@{/abandon}" method="post" style="display:inline">
+                <button type="submit">Salir</button>
+            </form>
+        </div>
+
+        <div th:unless="${summary.finished}">
+            <form th:object="${guessForm}" th:action="@{/guess}" method="post" class="card">
+                <h2>Intento actual</h2>
+                <label>
+                    Numero
+                    <input type="text" th:field="*{guess}" placeholder="Introduce tu numero">
+                </label>
+                <div class="error" th:if="${#fields.hasErrors('guess')}" th:errors="*{guess}">Entrada invalida</div>
+                <button type="submit">Probar suerte</button>
+            </form>
+            <form th:action="@{/abandon}" method="post" style="margin-top:1rem;">
+                <button type="submit">Abandonar partida</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Marcador</h2>
+        <div class="scoreboard" th:if="${!summary.players.isEmpty()}">
+            <div class="score-item" th:each="p : ${summary.players}">
+                <span>
+                    <strong th:text="${p.alias}">Jugador</strong>
+                    <span th:if="${p.winner}"> [ganador]</span>
+                    <span th:if="${p.eliminated && !p.winner}"> [sin vidas]</span>
+                    <span th:if="${p.id == player.id}"> (Tu)</span>
+                </span>
+                <span th:text="'Vidas: ' + ${p.lives}">Vidas: 3</span>
+            </div>
+        </div>
+        <p th:if="${summary.players.isEmpty()}">Aún no hay jugadores inscritos.</p>
+    </section>
+</main>
+</body>
+</html>

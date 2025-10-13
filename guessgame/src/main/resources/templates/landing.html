@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>GuessGame - Unirse</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container">
+    <section class="panel">
+        <h1>GuessGame Web</h1>
+        <p>Demuestra quien adivina antes el numero secreto (1-10). Cada jugador dispone de
+            <strong th:text="${summary.maxLives}">3</strong> vidas.</p>
+
+        <form th:object="${playerForm}" th:action="@{/join}" method="post" class="card">
+            <h2>Únete a la partida</h2>
+            <label>
+                Alias
+                <input type="text" th:field="*{alias}" placeholder="Ej: Jugador ninja">
+            </label>
+            <div class="error" th:if="${#fields.hasErrors('alias')}" th:errors="*{alias}">Alias requerido</div>
+            <button type="submit">Entrar</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>Jugadores activos</h2>
+        <p th:if="${summary.players.isEmpty()}">Aun no hay nadie jugando. Se la primera persona en unirse.</p>
+        <ul th:if="${!summary.players.isEmpty()}">
+            <li th:each="player : ${summary.players}"
+                th:text="${player.alias} + ' - Vidas: ' + ${player.lives}">Jugador - Vidas: 3</li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>
