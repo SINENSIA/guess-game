@@ -12,21 +12,24 @@ import org.junit.jupiter.api.Test;
  * <p>
  * Cubre dos escenarios fundamentales:
  * <ul>
- *     <li>Flujo de éxito tras uno o más intentos fallidos.</li>
- *     <li>Gestión de entradas inválidas y comunicación del mensaje correspondiente.</li>
+ * <li>Flujo de éxito tras uno o más intentos fallidos.</li>
+ * <li>Gestión de entradas inválidas y comunicación del mensaje
+ * correspondiente.</li>
  * </ul>
- * Al usar un <em>mock manual</em> (objeto falso) de {@link GameIO}, aislamos la lógica de negocio
+ * Al usar un <em>mock manual</em> (objeto falso) de {@link GameIO}, aislamos la
+ * lógica de negocio
  * del canal real de entrada/salida.
  * </p>
  *
  * @author sinensia
- * @version 0.0.2
+ * @version 0.0.3
  */
 class GuessGameTest {
 
     /**
      * Mock sencillo de {@link GameIO} que guarda entradas y salidas en memoria.
-     * Ilustra el patrón <strong>Test Double</strong>, concretamente la variante Mock,
+     * Ilustra el patrón <strong>Test Double</strong>, concretamente la variante
+     * Mock,
      * para observar las interacciones entre la aplicación y la capa de E/S.
      */
     static class MockIO implements GameIO {
@@ -46,7 +49,8 @@ class GuessGameTest {
         }
 
         /**
-         * Registra los mensajes emitidos por la aplicación para que los asserts los inspeccionen.
+         * Registra los mensajes emitidos por la aplicación para que los asserts los
+         * inspeccionen.
          *
          * @param mensaje texto que la aplicación desea mostrar
          */
@@ -56,7 +60,8 @@ class GuessGameTest {
         }
 
         /**
-         * Devuelve el siguiente token simulado, reproduciendo la interacción usuario-aplicación.
+         * Devuelve el siguiente token simulado, reproduciendo la interacción
+         * usuario-aplicación.
          *
          * @return entrada suministrada en el constructor
          */

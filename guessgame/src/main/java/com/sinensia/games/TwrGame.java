@@ -14,7 +14,7 @@ import java.util.Scanner;
  * </p>
  *
  * @author sinensia
- * @version 0.0.2
+ * @version 0.0.3
  */
 public class TwrGame {
 

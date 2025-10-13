@@ -3,12 +3,14 @@ package com.sinensia.games;
 /**
  * Abstracción minimalista para desacoplar la interacción de entrada/salida.
  * <p>
- * Representa la cara del patrón <strong>Strategy</strong> que consume {@link AppGame}: cada implementación
- * define su forma de mostrar mensajes y leer entradas sin alterar la lógica del juego.
+ * Representa la cara del patrón <strong>Strategy</strong> que consume
+ * {@link AppGame}: cada implementación
+ * define su forma de mostrar mensajes y leer entradas sin alterar la lógica del
+ * juego.
  * </p>
  *
  * @author sinensia
- * @version 0.0.2
+ * @version 0.0.3
  */
 public interface GameIO {
 

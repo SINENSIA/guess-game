@@ -4,32 +4,38 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Pequeña demo para ilustrar que {@link GuessGame} soporta accesos concurrentes.
+ * Pequeña demo para ilustrar que {@link GuessGame} soporta accesos
+ * concurrentes.
  * <p>
- * Aplica el patrón <strong>Executor</strong> (basado en {@link ExecutorService}) para lanzar múltiples
+ * Aplica el patrón <strong>Executor</strong> (basado en
+ * {@link ExecutorService}) para lanzar múltiples
  * hilos trabajadores que comparten la misma instancia de juego.
  * También recurre a dos singletons:
  * <ul>
- *     <li>{@link GameRandom} para reutilizar la fuente pseudoaleatoria.</li>
- *     <li>{@link GameLogger} para registrar eventos y excepciones de forma centralizada.</li>
+ * <li>{@link GameRandom} para reutilizar la fuente pseudoaleatoria.</li>
+ * <li>{@link GameLogger} para registrar eventos y excepciones de forma
+ * centralizada.</li>
  * </ul>
- * Cada hilo ejerce de "cliente" independiente y demuestra cómo el bloqueo interno de {@link GuessGame}
+ * Cada hilo ejerce de "cliente" independiente y demuestra cómo el bloqueo
+ * interno de {@link GuessGame}
  * evita condiciones de carrera.
  * </p>
  *
  * @author sinensia
- * @version 0.0.2
+ * @version 0.0.3
  */
 public final class ConcurrentGame {
 
     private static final int NUM_JUGADORES = 3;
     private static final int VIDAS_POR_JUGADOR = 3;
+
     private ConcurrentGame() {
         // Evitamos instanciación: la clase solo ofrece el método main.
     }
 
     /**
-     * Ejecuta la simulación concurrente creando un pool fijo de jugadores virtuales.
+     * Ejecuta la simulación concurrente creando un pool fijo de jugadores
+     * virtuales.
      *
      * @param args parámetros de línea de comandos (no utilizados)
      */
@@ -47,7 +53,8 @@ public final class ConcurrentGame {
     }
 
     /**
-     * Rutina que ejecuta cada jugador virtual: genera intentos aleatorios hasta detectar un ganador.
+     * Rutina que ejecuta cada jugador virtual: genera intentos aleatorios hasta
+     * detectar un ganador.
      *
      * @param juego  instancia compartida y thread-safe
      * @param nombre etiqueta de identificación del "jugador"
@@ -62,7 +69,8 @@ public final class ConcurrentGame {
                 case FAILED -> GameLogger.info(nombre + " probó con " + intento);
                 case INVALID -> GameLogger.warn(nombre + " introdujo un valor no numérico.");
                 case OUTOFRANGE -> GameLogger.warn(nombre + " salió del rango permitido con " + intento);
-                case ERROR -> GameLogger.error("BUG: estado de error inesperado en ConcurrentGame", new IllegalStateException("Estado ERROR en hilo " + nombre));
+                case ERROR -> GameLogger.error("BUG: estado de error inesperado en ConcurrentGame",
+                        new IllegalStateException("Estado ERROR en hilo " + nombre));
                 case ENDED -> GameLogger.info(nombre + " detectó que la partida terminó.");
             }
 

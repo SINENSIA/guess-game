@@ -6,15 +6,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Núcleo del juego de adivinar números.
  * <p>
- * Encapsula el número secreto y el conteo de vidas aplicando el patrón <strong>Monitor Object</strong>:
- * todas las operaciones sensibles se ejecutan dentro de un bloqueo interno para garantizar
- * la consistencia cuando se invoca desde múltiples hilos (ver {@link #verificarInput(String)}).
- * También expone lectura segura del estado mediante {@link AtomicBoolean}, lo que permite comprobar
+ * Encapsula el número secreto y el conteo de vidas aplicando el patrón
+ * <strong>Monitor Object</strong>:
+ * todas las operaciones sensibles se ejecutan dentro de un bloqueo interno para
+ * garantizar
+ * la consistencia cuando se invoca desde múltiples hilos (ver
+ * {@link #verificarInput(String)}).
+ * También expone lectura segura del estado mediante {@link AtomicBoolean}, lo
+ * que permite comprobar
  * si se ha terminado la partida sin entrar en secciones críticas.
  * </p>
  *
  * @author sinensia
- * @version 0.0.2
+ * @version 0.0.3
  */
 public class GuessGame {
 
@@ -69,7 +73,8 @@ public class GuessGame {
     public Estado verificarInput(String numero) {
         synchronized (lock) {
             if (terminado.get()) {
-                // Si alguien ya ganó, notificamos explícitamente el estado para clientes concurrentes.
+                // Si alguien ya ganó, notificamos explícitamente el estado para clientes
+                // concurrentes.
                 return Estado.ENDED;
             }
 
@@ -105,7 +110,8 @@ public class GuessGame {
     }
 
     /**
-     * Devuelve el número secreto en curso (principalmente útil para informes o pruebas).
+     * Devuelve el número secreto en curso (principalmente útil para informes o
+     * pruebas).
      *
      * @return número secreto configurado para la partida
      */

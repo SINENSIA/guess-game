@@ -8,14 +8,17 @@ import com.sinensia.games.GuessGame.Estado;
 /**
  * Orquesta la interacción del jugador con la lógica del juego.
  * <p>
- * Implementa el patrón <strong>Strategy</strong> al recibir una implementación de {@link GameIO},
- * permitiendo intercambiar el canal de entrada/salida (consola real, interfaz gráfica, mocks en tests, etc.)
- * sin modificar el flujo principal. Además, sigue el principio de inversión de dependencias al recibir
+ * Implementa el patrón <strong>Strategy</strong> al recibir una implementación
+ * de {@link GameIO},
+ * permitiendo intercambiar el canal de entrada/salida (consola real, interfaz
+ * gráfica, mocks en tests, etc.)
+ * sin modificar el flujo principal. Además, sigue el principio de inversión de
+ * dependencias al recibir
  * sus colaboraciones desde el exterior.
  * </p>
  *
  * @author sinensia
- * @version 0.0.2
+ * @version 0.0.3
  */
 public class AppGame {
 
@@ -23,7 +26,8 @@ public class AppGame {
     private final GameIO io; // Canal de entrada/salida (consola, mocks, etc.).
 
     /**
-     * Crea la aplicación de consola inyectando la lógica del juego y el canal de E/S.
+     * Crea la aplicación de consola inyectando la lógica del juego y el canal de
+     * E/S.
      *
      * @param game lógica central que conoce el número secreto
      * @param io   estrategia de interacción con la persona usuaria
@@ -38,12 +42,14 @@ public class AppGame {
     /**
      * Arranca el ciclo de juego clásico:
      * <ol>
-     *     <li>Da la bienvenida e informa del número de vidas.</li>
-     *     <li>Pide intentos hasta acertar o agotar las vidas.</li>
-     *     <li>Comunica el resultado de cada jugada con mensajes claros.</li>
+     * <li>Da la bienvenida e informa del número de vidas.</li>
+     * <li>Pide intentos hasta acertar o agotar las vidas.</li>
+     * <li>Comunica el resultado de cada jugada con mensajes claros.</li>
      * </ol>
-     * Esta operación personifica el patrón <strong>Template Method</strong> informal,
-     * porque define la secuencia fija de pasos mientras delega la entrada/salida a {@link GameIO}.
+     * Esta operación personifica el patrón <strong>Template Method</strong>
+     * informal,
+     * porque define la secuencia fija de pasos mientras delega la entrada/salida a
+     * {@link GameIO}.
      */
     public void start() {
         int vidasRestantes = game.getMaxVidas();
@@ -84,7 +90,8 @@ public class AppGame {
                     io.print("La partida ya había finalizado.");
                     return;
                 }
-                // OUTOFRANGE o ENDED representan escenarios menos comunes pero gestionados arriba.
+                // OUTOFRANGE o ENDED representan escenarios menos comunes pero gestionados
+                // arriba.
             }
         }
         // Llegamos aquí cuando el jugador pierde todas sus vidas.
@@ -92,7 +99,8 @@ public class AppGame {
     }
 
     /**
-     * Punto de entrada convencional para ejecutar el juego desde la consola estándar.
+     * Punto de entrada convencional para ejecutar el juego desde la consola
+     * estándar.
      * Instancia la lógica con 3 vidas y utiliza la consola como estrategia de E/S.
      *
      * @param args parámetros de línea de comandos (no utilizados)
