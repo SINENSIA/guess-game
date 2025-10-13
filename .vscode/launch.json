@@ -1,0 +1,57 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "ConcurrentGame",
+      "request": "launch",
+      "mainClass": "com.sinensia.games.ConcurrentGame",
+      "projectName": "guessgame"
+    },
+    {
+      "type": "java",
+      "name": "TwrGame",
+      "request": "launch",
+      "mainClass": "com.sinensia.games.TwrGame",
+      "projectName": "guessgame"
+    },
+    {
+      "type": "java",
+      "name": "AppGame",
+      "request": "launch",
+      "mainClass": "com.sinensia.games.AppGame",
+      "projectName": "guessgame"
+    },
+    {
+      "type": "java",
+      "name": "Current File",
+      "request": "launch",
+      "mainClass": "${file}"
+    },
+    {
+      "type": "java",
+      "name": "Game",
+      "request": "launch",
+      "mainClass": "com.sinensia.games.Game",
+      "projectName": "guessgame"
+    },
+    {
+      "type": "java",
+      "name": "Main",
+      "request": "launch",
+      "mainClass": "com.sinensia.games.Main",
+      "projectName": "guessgame"
+    },
+    {
+      "type": "java",
+      "name": "Launch Game",
+      "request": "launch",
+      "mainClass": "com.sinensia.games.Game",
+      "projectName": "guessgame",
+      "args": ["uno", "dos", "tres"]
+    }
+  ]
+}
