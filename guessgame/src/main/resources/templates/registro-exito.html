@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro completado</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<main class="container">
+    <section class="panel">
+        <h1>Registro completado</h1>
+        <p th:if="${welcomeMessage}" class="alert alert-success" th:text="${welcomeMessage}">
+            ¡Registro exitoso!
+        </p>
+        <p th:text="'Jugador: ' + ${alias}">Jugador registrado</p>
+        <p th:text="'Edad: ' + ${edad}">Edad</p>
+        <p th:text="'Id de partida: ' + ${partidaId}">Id de la partida</p>
+        <a th:href="@{/game}">
+            <button type="button">Comenzar a jugar</button>
+        </a>
+    </section>
+    <section class="panel">
+        <h2>Jugadores activos</h2>
+        <ul class="scoreboard" th:if="${!summary.players.isEmpty()}">
+            <li class="score-item" th:each="player : ${summary.players}">
+                <span th:text="${player.alias}">Alias</span>
+                <span th:text="'Vidas: ' + ${player.lives}">Vidas</span>
+            </li>
+        </ul>
+        <p th:if="${summary.players.isEmpty()}">Aún no hay más jugadores conectados.</p>
+    </section>
+    <section class="panel">
+        <h2>Ranking de jugadores</h2>
+        <p th:if="${ranking.isEmpty()}">Todavía no hay resultados registrados.</p>
+        <ol class="ranking-list" th:if="${!ranking.isEmpty()}">
+            <li th:each="entry, iterStat : ${ranking}">
+                <span class="ranking-position" th:text="${iterStat.index + 1}">1</span>
+                <span class="ranking-alias" th:text="${entry.alias()}">Alias</span>
+                <span class="ranking-stats"
+                      th:text="'G: ' + ${entry.ganadas()} + ' / P: ' + ${entry.perdidas()} + ' / Total: ' + ${entry.total()} + ' / Acierto: ' + ${#numbers.formatDecimal(entry.porcentajeAcierto(), 1, 2)} + '%'">
+                    G: 0 / P: 0 / Total: 0 / Acierto: 0%
+                </span>
+            </li>
+        </ol>
+    </section>
+</main>
+</body>
+</html>

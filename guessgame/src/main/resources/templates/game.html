@@ -65,6 +65,21 @@
         </div>
         <p th:if="${summary.players.isEmpty()}">Aún no hay jugadores inscritos.</p>
     </section>
+
+    <section class="panel">
+        <h2>Ranking histórico</h2>
+        <p th:if="${ranking.isEmpty()}">Todavía no hay partidas registradas.</p>
+        <ol class="ranking-list" th:if="${!ranking.isEmpty()}">
+            <li th:each="entry, iterStat : ${ranking}">
+                <span class="ranking-position" th:text="${iterStat.index + 1}">1</span>
+                <span class="ranking-alias" th:text="${entry.alias()}">Alias</span>
+                <span class="ranking-stats"
+                      th:text="'G: ' + ${entry.ganadas()} + ' / P: ' + ${entry.perdidas()} + ' / Total: ' + ${entry.total()} + ' / Acierto: ' + ${#numbers.formatDecimal(entry.porcentajeAcierto(), 1, 2)} + '%'">
+                    G: 0 / P: 0 / Total: 0 / Acierto: 0%
+                </span>
+            </li>
+        </ol>
+    </section>
 </main>
 </body>
 </html>

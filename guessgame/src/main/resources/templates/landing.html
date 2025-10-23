@@ -11,6 +11,7 @@
         <h1>GuessGame Web</h1>
         <p>Demuestra quien adivina antes el numero secreto (1-10). Cada jugador dispone de
             <strong th:text="${summary.maxLives}">3</strong> vidas.</p>
+        <p class="alert alert-success" th:if="${welcomeMessage}" th:text="${welcomeMessage}">¡Bienvenido!</p>
 
         <form th:object="${playerForm}" th:action="@{/join}" method="post" class="card">
             <h2>Únete a la partida</h2>
@@ -19,6 +20,41 @@
                 <input type="text" th:field="*{alias}" placeholder="Ej: Jugador ninja">
             </label>
             <div class="error" th:if="${#fields.hasErrors('alias')}" th:errors="*{alias}">Alias requerido</div>
+            <label>
+                Edad
+                <input type="number" th:field="*{edad}" min="18" placeholder="18">
+            </label>
+            <div class="error" th:if="${#fields.hasErrors('edad')}" th:errors="*{edad}">Edad requerida</div>
+            <label>
+                Contraseña
+                <input type="password" th:field="*{password}" placeholder="Introduce tu contraseña">
+            </label>
+            <div class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Contraseña requerida</div>
+            <label>
+                Confirmar contraseña
+                <input type="password" th:field="*{passwordConfirm}" placeholder="Repite la contraseña">
+            </label>
+            <div class="error" th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}">
+                Confirma la contraseña
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <h2>¿Ya tienes cuenta?</h2>
+        <p>Introduce tu alias y contraseña para iniciar sesión y seguir jugando con tu historial.</p>
+        <form th:object="${loginForm}" th:action="@{/login}" method="post" class="card">
+            <label>
+                Alias
+                <input type="text" th:field="*{alias}" placeholder="Alias registrado">
+            </label>
+            <div class="error" th:if="${#fields.hasErrors('alias')}" th:errors="*{alias}">Alias requerido</div>
+            <label>
+                Contraseña
+                <input type="password" th:field="*{password}" placeholder="Tu contraseña">
+            </label>
+            <div class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Contraseña requerida</div>
             <button type="submit">Entrar</button>
         </form>
     </section>
@@ -30,6 +66,21 @@
             <li th:each="player : ${summary.players}"
                 th:text="${player.alias} + ' - Vidas: ' + ${player.lives}">Jugador - Vidas: 3</li>
         </ul>
+    </section>
+
+    <section class="panel">
+        <h2>Ranking de jugadores</h2>
+        <p th:if="${ranking.isEmpty()}">Todavía no hay resultados registrados.</p>
+        <ol class="ranking-list" th:if="${!ranking.isEmpty()}">
+            <li th:each="entry, iterStat : ${ranking}">
+                <span class="ranking-position" th:text="${iterStat.index + 1}">1</span>
+                <span class="ranking-alias" th:text="${entry.alias()}">Alias</span>
+                <span class="ranking-stats"
+                      th:text="'G: ' + ${entry.ganadas()} + ' / P: ' + ${entry.perdidas()} + ' / Total: ' + ${entry.total()} + ' / Acierto: ' + ${#numbers.formatDecimal(entry.porcentajeAcierto(), 1, 2)} + '%'">
+                    G: 0 / P: 0 / Total: 0 / Acierto: 0%
+                </span>
+            </li>
+        </ol>
     </section>
 </main>
 </body>
